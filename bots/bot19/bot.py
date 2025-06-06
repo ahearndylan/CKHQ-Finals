@@ -29,16 +29,16 @@ api = tweepy.API(auth)
 # ======================= #
 
 POLL_OPTIONS = [
-    "Jayson Tatum",
-    "Jaylen Brown",
-    "Luka Dončić",
+    "Tyrese Haliburton",
+    "Shai Gilgeous-Alexander",
+    "Pascal Siakam",
     "Other (comment below)"
 ]
 
 IMAGE_PATHS = [
-    "img/jayson.jpeg",
-    "img/jaylen.jpeg",
-    "img/luka.jpeg"
+    "img/tyrese.png",
+    "img/shai.png",
+    "img/pascal.png"
 ]
 
 # ======================= #
@@ -48,7 +48,27 @@ IMAGE_PATHS = [
 def run_bot():
     print("🤖 Running Finals MVP Poll Bot...")
 
-    # Upload headshots and get media IDs
+    today = datetime.now().strftime("%B %d, %Y")
+
+    # Step 1: Post the poll first
+    poll_text = (
+        f"🏆 After Game 1 – Who's your NBA Finals MVP so far? \n\n"
+        "Vote below ⬇️"
+    )
+
+    try:
+        poll_tweet = client.create_tweet(
+            text=poll_text,
+            poll_options=POLL_OPTIONS,
+            poll_duration_minutes=1440
+        )
+        poll_tweet_id = poll_tweet.data["id"]
+        print(f"✅ Poll tweet posted (ID: {poll_tweet_id})")
+    except Exception as e:
+        print(f"❌ Failed to post poll tweet: {e}")
+        return
+
+    # Step 2: Upload images and reply with them
     media_ids = []
     for path in IMAGE_PATHS:
         try:
@@ -58,24 +78,21 @@ def run_bot():
         except Exception as e:
             print(f"❌ Failed to upload {path}: {e}")
 
-    # Format tweet text
-    today = datetime.now().strftime("%B %d, %Y")
-    tweet_text = (
-        f"🏆 After Game 1 – Who's your NBA Finals MVP so far? ({today})\n\n"
-        "Vote below ⬇️"
-    )
+    if not media_ids:
+        print("⚠️ No media uploaded. Skipping image reply.")
+        return
 
     try:
-        # Post tweet with poll and media
+        reply_text = "📸 MVP Candidates:"
         client.create_tweet(
-            text=tweet_text,
-            poll_options=POLL_OPTIONS,
-            poll_duration_minutes=1440,
-            media_ids=media_ids
+            text=reply_text,
+            media_ids=media_ids,
+            in_reply_to_tweet_id=poll_tweet_id
         )
-        print("✅ Tweet posted successfully.")
+        print("✅ Image reply posted successfully.")
     except Exception as e:
-        print("❌ Error posting tweet:", e)
+        print(f"❌ Failed to post image reply: {e}")
+
 
 if __name__ == "__main__":
     run_bot()

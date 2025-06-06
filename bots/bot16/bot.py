@@ -43,19 +43,20 @@ def get_finals_game_ids_and_number(date_str, max_retries=3):
         try:
             scoreboard = scoreboardv2.ScoreboardV2(game_date=date_str)
             games = scoreboard.get_normalized_dict()["GameHeader"]
-            finals_games = [g for g in games if "final" in g.get("SeriesDescription", "").lower()]
 
-            if not finals_games:
+            if not games:
                 return [], None
 
-            game_ids = [g["GAME_ID"] for g in finals_games]
-            game_number = finals_games[0].get("GameNumber", 1)
+            # Assume only Finals games are happening now — grab all games
+            game_ids = [g["GAME_ID"] for g in games]
+            game_number = games[0].get("GameNumber", 1)
 
             return game_ids, game_number
         except Exception as e:
             print(f"Attempt {attempt + 1} failed: {e}")
             time.sleep(2)
     raise Exception("Failed to fetch game data after multiple attempts.")
+
 
 def get_efficiency_stats(game_ids):
     top_efficiency = {"name": "", "fg_pct": 0.0, "fga": 0, "team": ""}
@@ -119,7 +120,8 @@ def get_efficiency_stats(game_ids):
 def compose_finals_efficiency_tweet(date_str, game_number, efficiency, plus_minus, stocks, triple_double):
     formatted_date = datetime.strptime(date_str, "%Y-%m-%d").strftime("%m/%d/%Y")
 
-    tweet = f"""🏆 NBA Finals – Game {game_number} ({formatted_date})
+    tweet = f"""🏆 NBA Finals – Game {game_number}  
+📅 {formatted_date}
 
 ⚡ Efficient: {efficiency['name']} ({efficiency['team']}) – {efficiency['fg_pct']}% FG ({efficiency['fga']} FGA)
 📈 Plus/Minus: {plus_minus['name']} ({plus_minus['team']}) – +{plus_minus['plus_minus']}
@@ -130,6 +132,7 @@ def compose_finals_efficiency_tweet(date_str, game_number, efficiency, plus_minu
 
     tweet += "\n\n#NBAFinals #CourtKingsHQ"
     return tweet
+
 
 # ============================= #
 #      SUPABASE WRITE           #

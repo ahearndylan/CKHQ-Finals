@@ -43,19 +43,24 @@ def get_game_ids_and_number(date_str, max_retries=3):
         try:
             scoreboard = scoreboardv2.ScoreboardV2(game_date=date_str)
             games = scoreboard.get_normalized_dict()["GameHeader"]
-            finals_games = [g for g in games if "Finals" in g.get("SeriesDescription", "")]
 
-            if not finals_games:
+            # Log all games to see what fields are returned (optional)
+            # for g in games:
+            #     print(g)
+
+            # In Finals, just grab all games — there's usually only one
+            if not games:
                 return [], None
 
-            game_ids = [g["GAME_ID"] for g in finals_games]
-            game_number = finals_games[0].get("GameNumber", 1)  # Usually only 1 Finals game per day
+            game_ids = [g["GAME_ID"] for g in games]
+            game_number = games[0].get("GameNumber", 1)
 
             return game_ids, game_number
         except Exception as e:
             print(f"Attempt {attempt + 1} failed: {e}")
             time.sleep(2)
     raise Exception("Failed to fetch game data after multiple attempts.")
+
 
 
 def get_stat_leaders(game_ids):
@@ -86,9 +91,8 @@ def get_stat_leaders(game_ids):
 def compose_finals_tweet(date_str, game_number, points, assists, rebounds, threes):
     formatted_date = datetime.strptime(date_str, "%Y-%m-%d").strftime("%m/%d/%Y")
 
-    return f"""🏆 NBA Finals – {formatted_date}
-
-🔥 Game {game_number} Stat Leaders:
+    return f"""🏆 NBA Finals – Game {game_number}  
+📅 {formatted_date}
 
 ⭐ PTS: {points['player']} ({points['team']}) – {points['value']}
 🎯 AST: {assists['player']} ({assists['team']}) – {assists['value']}
@@ -96,6 +100,7 @@ def compose_finals_tweet(date_str, game_number, points, assists, rebounds, three
 🏹 3PM: {threes['player']} ({threes['team']}) – {threes['value']}
 
 #NBAFinals #CourtKingsHQ"""
+
 
 
 # ============================= #

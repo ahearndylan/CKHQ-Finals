@@ -35,7 +35,7 @@ def get_top_playoff_scorers():
     try:
         player_stats = leaguedashplayerstats.LeagueDashPlayerStats(
             season_type_all_star='Playoffs',
-            date_from_nullable='06/06/2025',
+            date_from_nullable='06/04/2025',
             date_to_nullable='06/23/2025'
         ).get_normalized_dict()
 
@@ -48,7 +48,7 @@ def get_top_playoff_scorers():
 
 def compose_tweet(top4):
     today = datetime.now().strftime("%B %d, %Y")
-    tweet = f"👑🔥 NBA Finals Scoring Leaders ({today})\n\n"
+    tweet = f"👑🔥 NBA Finals Scoring Leaders\n📅 {today}\n\n"
     medals = ["🥇", "🥈", "🥉"]
 
     for idx, player in enumerate(top4, 1):
@@ -56,13 +56,14 @@ def compose_tweet(top4):
         points = int(player['PTS'])
 
         if idx <= 3:
-            medal = medals[idx-1]
+            medal = medals[idx - 1]
             tweet += f"{medal} {name} – {points} PTS\n"
         else:
             tweet += f"{idx}. {name} – {points} PTS\n"
 
     tweet += "\n#NBAFinals #CourtKingsHQ"
     return tweet
+
 
 def get_top3_media_ids(top3):
     media_ids = []

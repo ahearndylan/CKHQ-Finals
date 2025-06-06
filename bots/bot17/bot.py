@@ -64,18 +64,20 @@ def get_finals_game_ids_and_number(date_str, max_retries=3):
         try:
             scoreboard = scoreboardv2.ScoreboardV2(game_date=date_str)
             games = scoreboard.get_normalized_dict()["GameHeader"]
-            finals_games = [g for g in games if "final" in g.get("SeriesDescription", "").lower()]
 
-            if not finals_games:
+            if not games:
                 return [], None
 
-            game_ids = [g["GAME_ID"] for g in finals_games]
-            game_number = finals_games[0].get("GameNumber", 1)
+            # Assume only Finals games are active — get all games from that date
+            game_ids = [g["GAME_ID"] for g in games]
+            game_number = games[0].get("GameNumber", 1)
+
             return game_ids, game_number
         except Exception as e:
             print(f"Attempt {attempt + 1} failed: {e}")
             time.sleep(2)
     raise Exception("Failed to fetch Finals game IDs.")
+
 
 
 def get_player_team_map(game_id):
@@ -165,7 +167,8 @@ def aggregate_leaders(games_stats):
 def compose_finals_clutch_tweet(date_str, game_number, points, fg, assists, team_4q_diff):
     formatted_date = datetime.strptime(date_str, "%Y-%m-%d").strftime("%m/%d/%Y")
 
-    tweet = f"""🏆 NBA Finals – Game {game_number} ({formatted_date})
+    tweet = f"""🏆 NBA Finals – Game {game_number} 
+📅 {formatted_date}
 
 🚀 4Q Scoring: {points['name']} ({points['team']}) – {points['stat']} PTS
 💎 4Q Efficiency: {fg['name']} ({fg['team']}) – {fg['fg_pct']}% FG ({fg['fga']} FGA)
